@@ -157,6 +157,174 @@ try:
     ON "Departements" ("Id");
     """
 
+<<<<<<< Updated upstream
+=======
+    create_permissions_table = """
+    CREATE TABLE IF NOT EXISTS "permissions" (
+        "id" SERIAL PRIMARY KEY,
+        "name" VARCHAR NOT NULL,
+        "guard_name" VARCHAR NOT NULL,
+        "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE UNIQUE INDEX IF NOT EXISTS "permissions_unique_index"
+    ON "permissions" ("name", "guard_name");
+    """
+
+    create_roles_table = """
+    CREATE TABLE IF NOT EXISTS "roles" (
+        "id" SERIAL PRIMARY KEY,
+        "name" VARCHAR NOT NULL,
+        "guard_name" VARCHAR NOT NULL,
+        "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE UNIQUE INDEX IF NOT EXISTS "Roles_unique_index"
+    ON "roles" ("name", "guard_name");
+    """
+
+    create_model_has_permissions_table = """
+    CREATE TABLE IF NOT EXISTS "model_has_permissions" (
+        "permission_id" INTEGER NOT NULL,
+        "model_type" VARCHAR NOT NULL,
+        "model_id" INTEGER NOT NULL,
+        PRIMARY KEY ("permission_id", "model_id", "model_type"),
+        FOREIGN KEY ("permission_id") REFERENCES "permissions" ("id") ON DELETE CASCADE
+    );
+    CREATE INDEX IF NOT EXISTS "ModelHasPermissions_model_id_model_type_index"
+    ON "model_has_permissions" ("model_id", "model_type");
+    """
+
+    create_model_has_roles_table = """
+    CREATE TABLE IF NOT EXISTS "model_has_roles" (
+        "role_id" INTEGER NOT NULL,
+        "model_type" VARCHAR NOT NULL,
+        "model_id" INTEGER NOT NULL,
+        PRIMARY KEY ("role_id", "model_id", "model_type"),
+        FOREIGN KEY ("role_id") REFERENCES "roles" ("id") ON DELETE CASCADE
+    );
+    CREATE INDEX IF NOT EXISTS "ModelHasRoles_model_id_model_type_index"
+    ON "model_has_roles" ("model_id", "model_type");
+    """
+
+    create_role_has_permissions_table = """
+    CREATE TABLE IF NOT EXISTS "role_has_permissions" (
+        "permission_id" INTEGER NOT NULL,
+        "role_id" INTEGER NOT NULL,
+        PRIMARY KEY ("permission_id", "role_id"),
+        FOREIGN KEY ("permission_id") REFERENCES "permissions" ("id") ON DELETE CASCADE,
+        FOREIGN KEY ("role_id") REFERENCES "roles" ("id") ON DELETE CASCADE
+    );
+    """
+
+    create_users_table = """
+    CREATE TABLE IF NOT EXISTS "users" (
+        "id" SERIAL PRIMARY KEY,
+        "firstname" VARCHAR NOT NULL,
+        "lastname" VARCHAR NOT NULL,
+        "email" VARCHAR NOT NULL UNIQUE,
+        "password" VARCHAR NOT NULL,
+        "manager_id" INTEGER,
+        "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY ("manager_id") REFERENCES "users" ("id")
+    );
+    CREATE INDEX IF NOT EXISTS "Users_index_0"
+    ON "users" ("id");
+    """
+
+    create_invite_table = """
+    CREATE TABLE IF NOT EXISTS "invites" (
+        "id" SERIAL PRIMARY KEY,
+        "token" VARCHAR NOT NULL UNIQUE,
+        "expires_at" TIMESTAMP,
+        "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE UNIQUE INDEX IF NOT EXISTS "invites_token_unique_index"
+    ON "invites" ("token");
+    """
+
+    create_session_table = '''
+    CREATE TABLE IF NOT EXISTS "sessions" (
+        "id" VARCHAR PRIMARY KEY,
+        "user_id" INTEGER,
+        "ip_address" VARCHAR(45),
+        "user_agent" TEXT,
+        "payload" TEXT,
+        "last_activity" INTEGER,
+        FOREIGN KEY ("user_id") REFERENCES "users" ("id") ON DELETE SET NULL
+    );
+    CREATE INDEX IF NOT EXISTS "sessions_user_id_index" ON "sessions" ("user_id");
+    CREATE INDEX IF NOT EXISTS "sessions_last_activity_index" ON "sessions" ("last_activity");
+    '''
+
+    create_password_reset_tokens_table = '''
+    CREATE TABLE IF NOT EXISTS "password_reset_tokens" (
+        "email" VARCHAR(255) NOT NULL,
+        "token" VARCHAR(255) NOT NULL,
+        "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY ("email")
+    );
+    '''
+
+    create_jobs_table = """
+    CREATE TABLE IF NOT EXISTS "jobs" (
+        "id" SERIAL PRIMARY KEY,
+        "queue" VARCHAR NOT NULL,
+        "payload" TEXT NOT NULL,
+        "attempts" INTEGER NOT NULL,
+        "reserved_at" INTEGER,
+        "available_at" INTEGER NOT NULL,
+        "created_at" INTEGER NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS "jobs_queue_index" ON "jobs" ("queue");
+    """
+
+    create_job_batches_table = """
+    CREATE TABLE IF NOT EXISTS "job_batches" (
+        "id" VARCHAR PRIMARY KEY,
+        "name" VARCHAR NOT NULL,
+        "total_jobs" INTEGER NOT NULL,
+        "pending_jobs" INTEGER NOT NULL,
+        "failed_jobs" INTEGER NOT NULL,
+        "failed_job_ids" TEXT NOT NULL,
+        "options" TEXT,
+        "cancelled_at" INTEGER,
+        "created_at" INTEGER NOT NULL,
+        "finished_at" INTEGER
+    );
+    """
+
+    create_failed_jobs_table = """
+    CREATE TABLE IF NOT EXISTS "failed_jobs" (
+        "id" SERIAL PRIMARY KEY,
+        "uuid" VARCHAR NOT NULL UNIQUE,
+        "connection" TEXT NOT NULL,
+        "queue" TEXT NOT NULL,
+        "payload" TEXT NOT NULL,
+        "exception" TEXT NOT NULL,
+        "failed_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+    """
+
+    create_cache_table = """
+    CREATE TABLE IF NOT EXISTS "cache" (
+        "key" VARCHAR PRIMARY KEY,
+        "value" TEXT,
+        "expiration" INTEGER
+    );
+    """
+
+    create_cache_locks_table = """
+    CREATE TABLE IF NOT EXISTS "cache_locks" (
+        "key" VARCHAR PRIMARY KEY,
+        "owner" VARCHAR,
+        "expiration" INTEGER
+    );
+    """
+
+>>>>>>> Stashed changes
     # Execute the SQL scripts to create tables and indexes
     cursor.execute(create_weather_station_table)
     cursor.execute(create_weather_datas_table)
@@ -165,6 +333,52 @@ try:
     cursor.execute(create_trigger_function)
     cursor.execute(create_trigger)
 
+<<<<<<< Updated upstream
+=======
+    print("Connected to PostgreSQL!")
+    conn.close()
+
+    # SQL to create 'invite' database
+    conn = psycopg2.connect(dbname=DB_NAME, user=DB_USER, password=DB_PASSWORD, host=DB_HOST, port=DB_PORT)
+    conn.autocommit = True
+    cursor = conn.cursor()
+    cursor.execute("SELECT 1 FROM pg_database WHERE datname = 'invites'")
+    exists = cursor.fetchone()
+    if not exists:
+        create_invite_db = f"CREATE DATABASE invites WITH OWNER = '{DB_USER}';"
+        cursor.execute(create_invite_db)
+        print("Database 'invites' created successfully!")
+    else:
+        print("Database 'invites' already exists.")
+    conn.autocommit = False
+
+    # Close the connection to the 'postgres' database and reconnect to the new 'invite' database
+    conn.close()
+
+    # Now connect to the 'invite' database to create the tables
+    conn = psycopg2.connect(dbname='invites', user=DB_USER, password=DB_PASSWORD, host=DB_HOST, port=DB_PORT)
+    cursor = conn.cursor()
+    print("Connected to the 'invites' database!")
+
+    # Create tables for roles, permissions, models, model_has_roles, role_has_permissions, and users inside the newly created db user
+    cursor.execute(create_permissions_table)
+    cursor.execute(create_roles_table)
+    cursor.execute(create_model_has_permissions_table)
+    cursor.execute(create_model_has_roles_table)
+    cursor.execute(create_role_has_permissions_table)
+    cursor.execute(create_users_table)
+    cursor.execute(create_invite_table)
+    cursor.execute(create_session_table)
+    cursor.execute(create_password_reset_tokens_table)
+    cursor.execute(create_jobs_table)
+    cursor.execute(create_job_batches_table)
+    cursor.execute(create_failed_jobs_table)
+    cursor.execute(create_cache_table)
+    cursor.execute(create_cache_locks_table)
+
+    print("Tables created successfully in the 'invite' database!")
+
+>>>>>>> Stashed changes
     # Commit the transaction
     conn.commit()
 
